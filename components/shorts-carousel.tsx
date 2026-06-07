@@ -29,6 +29,7 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
   const activeIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+  const origin = typeof window !== "undefined" ? window.location.origin : undefined;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -111,7 +112,8 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
               controls: false,
               mute: true,
               playsinline: true,
-              rel: false
+              rel: false,
+              origin
             });
 
             return (

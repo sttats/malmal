@@ -15,15 +15,17 @@ type VideoPlayerProps = {
 export function VideoPlayer({ provider, videoId, url, title }: VideoPlayerProps) {
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const origin = typeof window !== "undefined" ? window.location.origin : undefined;
   const embedUrl = useMemo(
     () =>
       getVideoEmbedUrl(provider, videoId, {
         autoplay: true,
         mute: true,
         playsinline: true,
-        rel: false
+        rel: false,
+        origin
       }),
-    [provider, videoId]
+    [origin, provider, videoId]
   );
 
   const syncMuteState = useCallback(() => {
