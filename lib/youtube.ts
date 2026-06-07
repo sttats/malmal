@@ -90,6 +90,7 @@ type EmbedOptions = {
   mute?: boolean;
   playsinline?: boolean;
   rel?: boolean;
+  enableJsApi?: boolean;
 };
 
 export function getYouTubeEmbedUrl(videoId: string, options?: EmbedOptions) {
@@ -113,6 +114,10 @@ export function getYouTubeEmbedUrl(videoId: string, options?: EmbedOptions) {
 
   if (options?.rel === false) {
     params.set("rel", "0");
+  }
+
+  if (options?.enableJsApi !== false) {
+    params.set("enablejsapi", "1");
   }
 
   const query = params.toString();

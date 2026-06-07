@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getVideoEmbedUrl } from "@/lib/youtube";
 
@@ -14,16 +14,38 @@ type VideoPlayerProps = {
 
 export function VideoPlayer({ provider, videoId, url, title }: VideoPlayerProps) {
   const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const embedUrl = useMemo(
     () =>
       getVideoEmbedUrl(provider, videoId, {
         autoplay: true,
-        mute: isMuted,
+        mute: true,
         playsinline: true,
         rel: false
       }),
-    [isMuted, provider, videoId]
+    [provider, videoId]
   );
+
+  const syncMuteState = useCallback(() => {
+    const iframe = iframeRef.current;
+
+    if (!iframe?.contentWindow || provider !== "youtube") {
+      return;
+    }
+
+    iframe.contentWindow.postMessage(
+      JSON.stringify({
+        event: "command",
+        func: isMuted ? "mute" : "unMute",
+        args: []
+      }),
+      "*"
+    );
+  }, [isMuted, provider]);
+
+  useEffect(() => {
+    syncMuteState();
+  }, [syncMuteState]);
 
   if (!embedUrl) {
     return (
@@ -45,9 +67,11 @@ export function VideoPlayer({ provider, videoId, url, title }: VideoPlayerProps)
     <div className="overflow-hidden rounded-[2rem] bg-black shadow-card">
       <div className="relative aspect-video">
         <iframe
+          ref={iframeRef}
           src={embedUrl}
           title={title}
           className="h-full w-full"
+          onLoad={syncMuteState}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         />

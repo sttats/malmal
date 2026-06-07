@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { formatDate } from "@/lib/format";
 import { getVideoEmbedUrl } from "@/lib/youtube";
@@ -26,6 +26,7 @@ function reorderVideos(videos: VideoWithProfile[], initialVideoId: string) {
 export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) {
   const orderedVideos = useMemo(() => reorderVideos(videos, initialVideoId), [initialVideoId, videos]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const activeIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
 
@@ -48,6 +49,28 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
 
     window.history.replaceState(window.history.state, "", `/videos/${activeVideo.id}`);
   }, [activeIndex, orderedVideos]);
+
+  const syncMuteState = useCallback(() => {
+    const iframe = activeIframeRef.current;
+    const activeVideo = orderedVideos[activeIndex];
+
+    if (!iframe?.contentWindow || activeVideo?.provider !== "youtube") {
+      return;
+    }
+
+    iframe.contentWindow.postMessage(
+      JSON.stringify({
+        event: "command",
+        func: isMuted ? "mute" : "unMute",
+        args: []
+      }),
+      "*"
+    );
+  }, [activeIndex, isMuted, orderedVideos]);
+
+  useEffect(() => {
+    syncMuteState();
+  }, [syncMuteState]);
 
   function handleScroll() {
     const container = containerRef.current;
@@ -86,7 +109,7 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
             const embedUrl = getVideoEmbedUrl(video.provider, video.videoId, {
               autoplay: isActive,
               controls: false,
-              mute: isMuted,
+              mute: true,
               playsinline: true,
               rel: false
             });
@@ -98,9 +121,11 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
                     {isActive ? (
                       <>
                         <iframe
+                          ref={activeIframeRef}
                           src={embedUrl}
                           title={video.title}
                           className="h-full w-full"
+                          onLoad={syncMuteState}
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         />
