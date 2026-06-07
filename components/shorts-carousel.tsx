@@ -110,7 +110,7 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
             const embedUrl = getVideoEmbedUrl(video.provider, video.videoId, {
               autoplay: isActive,
               controls: false,
-              mute: true,
+              mute: isMuted,
               playsinline: true,
               rel: false,
               origin
