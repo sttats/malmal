@@ -27,6 +27,7 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
   const orderedVideos = useMemo(() => reorderVideos(videos, initialVideoId), [initialVideoId, videos]);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -85,7 +86,7 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
             const embedUrl = getVideoEmbedUrl(video.provider, video.videoId, {
               autoplay: isActive,
               controls: false,
-              mute: isActive,
+              mute: isMuted,
               playsinline: true,
               rel: false
             });
@@ -95,13 +96,23 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
                 <div className="overflow-hidden rounded-[1.75rem] bg-black">
                   <div className="relative aspect-[9/16]">
                     {isActive ? (
-                      <iframe
-                        src={embedUrl}
-                        title={video.title}
-                        className="h-full w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
+                      <>
+                        <iframe
+                          src={embedUrl}
+                          title={video.title}
+                          className="h-full w-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsMuted((currentValue) => !currentValue)}
+                          aria-label={isMuted ? "音声をオンにする" : "音声をオフにする"}
+                          className="absolute right-3 top-3 z-10 grid h-12 w-12 place-items-center rounded-full border border-white/15 bg-black/72 text-white shadow-lg backdrop-blur transition hover:bg-black/88"
+                        >
+                          {isMuted ? <MutedIcon /> : <VolumeIcon />}
+                        </button>
+                      </>
                     ) : (
                       <>
                         {video.thumbnailUrl ? (
@@ -161,5 +172,23 @@ export function ShortsCarousel({ initialVideoId, videos }: ShortsCarouselProps) 
         </Link>
       </div>
     </section>
+  );
+}
+
+function VolumeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-current">
+      <path d="M14.5 5.5a1 1 0 0 1 1.7.7v11.6a1 1 0 0 1-1.7.7l-4.1-4.1H7.2a1 1 0 0 1-1-1V10.1a1 1 0 0 1 1-1h3.2l4.1-4.1Z" />
+      <path d="M18.1 9.2a1 1 0 0 1 1.4 0 4.28 4.28 0 0 1 0 6.1 1 1 0 0 1-1.4-1.4 2.28 2.28 0 0 0 0-3.3 1 1 0 0 1 0-1.4Z" />
+    </svg>
+  );
+}
+
+function MutedIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6 fill-current">
+      <path d="M14.5 5.5a1 1 0 0 1 1.7.7v11.6a1 1 0 0 1-1.7.7l-4.1-4.1H7.2a1 1 0 0 1-1-1V10.1a1 1 0 0 1 1-1h3.2l4.1-4.1Z" />
+      <path d="m18.5 9.4 1.4 1.4-2 2 2 2-1.4 1.4-2-2-2 2-1.4-1.4 2-2-2-2 1.4-1.4 2 2 2-2Z" />
+    </svg>
   );
 }
