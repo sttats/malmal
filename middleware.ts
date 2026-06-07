@@ -1,0 +1,17 @@
+import type { NextRequest } from "next/server";
+
+import { createSupabaseMiddlewareClient } from "@/lib/supabase/server";
+
+export async function middleware(request: NextRequest) {
+  const { response, supabase } = createSupabaseMiddlewareClient(request);
+
+  if (supabase) {
+    await supabase.auth.getUser();
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"]
+};
